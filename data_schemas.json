@@ -1,0 +1,135 @@
+{
+  "driveFileSchema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique identifier of the file in Google Drive"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name of the file"
+      },
+      "mimeType": {
+        "type": "string",
+        "description": "MIME type of the file"
+      },
+      "size": {
+        "type": "integer",
+        "description": "Size of the file in bytes"
+      },
+      "createdTime": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Timestamp when the file was created"
+      },
+      "modifiedTime": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Timestamp when the file was last modified"
+      }
+    },
+    "required": ["id", "name", "mimeType"]
+  },
+  "selectedFilesSchema": {
+    "type": "array",
+    "items": {
+      "$ref": "#/driveFileSchema"
+    },
+    "description": "Array of selected Drive files for import"
+  },
+  "importConfigSchema": {
+    "type": "object",
+    "properties": {
+      "targetSpreadsheetId": {
+        "type": "string",
+        "description": "ID of the target Google Spreadsheet"
+      },
+      "worksheetName": {
+        "type": "string",
+        "description": "Name of the worksheet to import into"
+      },
+      "startRow": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Starting row for data insertion"
+      },
+      "startColumn": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Starting column for data insertion"
+      },
+      "importMode": {
+        "type": "string",
+        "enum": ["append", "overwrite", "newSheet"],
+        "description": "Mode of import operation"
+      },
+      "parseOptions": {
+        "type": "object",
+        "properties": {
+          "delimiter": {
+            "type": "string",
+            "description": "Delimiter for CSV-like files"
+          },
+          "headerRow": {
+            "type": "boolean",
+            "description": "Whether the first row is a header"
+          },
+          "extractText": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to extract text from documents like PDF or DOCX"
+          },
+          "pageRange": {
+            "type": "string",
+            "description": "Page range for PDF files (e.g., '1-5')"
+          }
+        }
+      }
+    },
+    "required": ["targetSpreadsheetId", "importMode"],
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "importMode": {
+              "enum": ["append", "overwrite"]
+            }
+          }
+        },
+        "then": {
+          "required": ["worksheetName"]
+        }
+      }
+    ]
+  },
+  "supportedMimeTypes": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    },
+    "description": "List of supported MIME types. Supports a wide range excluding images and specific disallowed types like executable code or certain document formats."
+  },
+  "importResultSchema": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the import was successful"
+      },
+      "message": {
+        "type": "string",
+        "description": "Result message or error details"
+      },
+      "importedRows": {
+        "type": "integer",
+        "description": "Number of rows imported"
+      },
+      "worksheetUrl": {
+        "type": "string",
+        "description": "URL to the updated worksheet"
+      }
+    },
+    "required": ["success", "message"]
+  }
+}
