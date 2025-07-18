@@ -1,0 +1,105 @@
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 10px; }
+      button { margin: 5px; }
+      #error { margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <button onclick="pickFile()">Select File from Drive</button>
+      <p>Selected File: <span id="fileName">None</span> (ID: <span id="fileId"></span>)</p>
+      <button id="importButton" onclick="triggerImport()" disabled>Import</button>
+      <div id="error" style="color: red;"></div>
+    </div>
+    <script>
+      var selectedFileId = '';
+      var selectedFileName = '';
+
+      function initSidebar() {
+        gapi.load('picker', { 'callback': function() { console.log('Picker API loaded'); } });
+      }
+
+      function pickFile() {
+        google.script.run.withSuccessHandler(createPicker).withFailureHandler(displayError).getOAuthToken();
+      }
+
+      function createPicker(oauthToken) {
+        var view = new google.picker.DocsView()
+          .setIncludeFolders(true)
+          .setSelectFolderEnabled(false);
+
+        var picker = new google.picker.PickerBuilder()
+          .addView(view)
+          .setOAuthToken(oauthToken)
+          .setCallback(pickerCallback)
+          .setTitle('Select a file to import')
+          .build();
+
+        picker.setVisible(true);
+      }
+
+      function pickerCallback(data) {
+        if (data.action === google.picker.Action.PICKED) {
+          var doc = data.docs[0];
+          var mimeType = doc.mimeType;
+          if (mimeType.startsWith('image/') || ['application/javascript', 'text/javascript', 'text/html', 'application/json'].includes(mimeType)) {
+            displayError('Selected file type not supported (images or code files not allowed).');
+            return;
+          }
+          onFileSelect(doc.id);
+        } else if (data.action === google.picker.Action.CANCEL) {
+          console.log('Picker cancelled');
+        }
+      }
+
+      function onFileSelect(fileId) {
+        selectedFileId = fileId;
+        document.getElementById('fileId').innerText = fileId;
+        document.getElementById('fileName').innerText = 'Loading name...';
+        document.getElementById('importButton').disabled = true;
+        google.script.run
+          .withSuccessHandler(function(name) {
+            selectedFileName = name;
+            document.getElementById('fileName').innerText = name || 'Unknown';
+            document.getElementById('importButton').disabled = false;
+            displayError('');
+          })
+          .withFailureHandler(function(err) {
+            displayError('Failed to get file name: ' + (err.message || 'Unknown error'));
+            document.getElementById('importButton').disabled = true;
+          })
+          .getFileName(fileId);
+      }
+
+      function triggerImport() {
+        if (!selectedFileId) {
+          displayError('No file selected.');
+          return;
+        }
+        document.getElementById('importButton').disabled = true;
+        google.script.run
+          .withSuccessHandler(function() {
+            displayError('');
+            alert('File imported successfully!');
+            document.getElementById('importButton').disabled = false;
+          })
+          .withFailureHandler(function(err) {
+            displayError(err.message || 'Import failed.');
+            document.getElementById('importButton').disabled = false;
+          })
+          .importFile(selectedFileId);
+      }
+
+      function displayError(message) {
+        document.getElementById('error').innerText = message;
+      }
+
+      // Initialize on load
+      window.onload = initSidebar;
+    </script>
+  </body>
+</html>
