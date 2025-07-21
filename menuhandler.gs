@@ -16,7 +16,7 @@ function createCustomMenu() {
  * Displays the import sidebar.
  */
 function showImportSidebar() {
-  var html = HtmlService.createHtmlOutputFromFile('importSidebar')
+  var html = HtmlService.createHtmlOutputFromFile('uisidebar')
     .setTitle('Import Files from Drive')
     .setWidth(300);
   SpreadsheetApp.getUi().showSidebar(html);
