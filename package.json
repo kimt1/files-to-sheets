@@ -1,0 +1,8 @@
+{
+  "name": "files-to-sheets",
+  "version": "1.0.0",
+  "description": "Google Apps Script project for importing Drive files into Sheets",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  }
+}

@@ -91,7 +91,7 @@
             displayError(err.message || 'Import failed.');
             document.getElementById('importButton').disabled = false;
           })
-          .importFile(selectedFileId);
+          .handleImportRequest([selectedFileId]);
       }
 
       function displayError(message) {
@@ -103,3 +103,4 @@
     </script>
   </body>
 </html>
+
